@@ -1,0 +1,117 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="ReducerJsonData/GC_TweetCo.js"></script>
+    <script src="ReducerJsonData/GC_TweetCo_Top.js"></script>
+    <meta charset="UTF-8">
+    <h1>GUN CONTROL</h1>
+    <h3>TWITTER'S TOP CO-OCCURING WORD</h3>
+    <body style="text-align: center">
+    <select id="sel" name="topWordSelected" onchange="buildHtmlTable('#excelDataTable',this.value)">
+        <option value="">-- Select --</option>
+    </select>
+    <br>
+    <br>
+  <table id="excelDataTable" border="1" align="center">
+    
+  </table>
+  
+
+<script>
+    window.onload = populateSelect();
+
+    function populateSelect() {
+        var ele = document.getElementById('sel');
+        for (var i = 0; i < topWords.length; i++) {
+            // POPULATE SELECT ELEMENT WITH JSON.
+            ele.innerHTML = ele.innerHTML +
+                '<option value="' + topWords[i]['value'] + '">' + topWords[i]['topWords'] + '</option>';
+        }
+    }
+</script>
+
+<script type="text/javascript">
+  
+
+// Builds the HTML Table out of myList.
+function buildHtmlTable(selector, optionV) {
+  var myList;
+  if(optionV=='control')
+    myList=control
+  if(optionV=='debate')
+    myList=debate
+  if(optionV=='gun')
+    myList=gun
+  if(optionV=='guns')
+    myList=guns
+  if(optionV=='hogg')
+    myList=hogg
+  if(optionV=='kids')
+    myList=kids
+  if(optionV=='know')
+    myList=know
+  if(optionV=='laws')
+    myList=laws
+  if(optionV=='need')
+    myList=need
+  if(optionV=='nra')
+    myList=nra
+  if(optionV=='parkland')
+    myList=parkland
+  if(optionV=='people')
+    myList=people
+  if(optionV=='right')
+    myList=right
+  if(optionV=='school')
+    myList=school
+  if(optionV=='students')
+    myList=students
+  if(optionV=='support')
+    myList=support
+  if(optionV=='think')
+    myList=think
+  if(optionV=='via')
+    myList=via
+  if(optionV=='want')
+    myList=want
+  if(optionV=='would')
+    myList=would
+  var columns = addAllColumnHeaders(myList, selector);
+  $(selector).find('tr').remove();
+  
+  for (var i = 0; i < myList.length; i++) {
+    var row$ = $('<tr/>');
+    for (var colIndex = 0; colIndex < columns.length; colIndex++) {
+      var cellValue = myList[i][columns[colIndex]];
+      if (cellValue == null) cellValue = "";
+      row$.append($('<td/>').html(cellValue));
+    }
+    $(selector).append(row$);
+  }
+}
+
+// Adds a header row to the table and returns the set of columns.
+// Need to do union of keys from all records as some records may not contain
+// all records.
+function addAllColumnHeaders(myList, selector) {
+  var columnSet = [];
+  var headerTr$ = $('<tr/>');
+
+  for (var i = 0; i < myList.length; i++) {
+    var rowHash = myList[i];
+    for (var key in rowHash) {
+      if ($.inArray(key, columnSet) == -1) {
+        columnSet.push(key);
+        headerTr$.append($('<th/>').html(key));
+      }
+    }
+  }
+  $(selector).append(headerTr$);
+
+  return columnSet;
+}
+</script>
+<a href="index.html" class="button">Go back</a>
+</body>
+ </head>
+ </html>

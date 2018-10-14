@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="coOccurenceJsonTest1.js"></script>
+    <meta charset="UTF-8">
+    <title>Word Cloud</title>
+  </head>
+  <script type="text/javascript">
+  $(document).ready(function () {
+    $("#topic").change(function () {
+        var val = $(this).val();
+        if (val == "gun") {
+            $("#daterange").html("<option>Select from List</option><option value='wordCloudSmallData.html'>Day</option><option value='wordCloudLargeData.html'>Week</option>");
+        } else if (val == "northkorea") {
+            $("#daterange").html("<option>Select from List</option><option value='wordCloudLargeForNorthKorea.html'>Week</option>");
+        }
+    });
+});
+  </script>
+  
+  <body style="text-align: center">
+    <h1>DATA AGGREGATION, BIG DATA ANALYSIS AND VISUALIZATION</h1>
+    <h2>WORD CLOUD</h2>
+    <select id="topic">
+      <option>Select from List</option>
+      <option value="gun">Gun Control</option>
+      <option value="northkorea">North Korea</option>
+    </select>
+    <select id="daterange" onchange="location = this.value;">
+      <option>Select from List</option>
+    </select>
+    <br>
+    <h2>CO OCCURENCE WORD</h2>
+    <select id="sel1" name="topWordSelected" onchange="location = this.value;">
+        <option value="">-- Select --</option>
+        <option value="newYorkArticlesCoOcc.html">New York Times Articles</option>
+        <option value="twitterCooCC.html">Twitter</option>
+    </select>
+    
+</script>
+  </body>
+</html>

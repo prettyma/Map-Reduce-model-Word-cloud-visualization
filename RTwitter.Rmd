@@ -1,0 +1,149 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+#install.packages("twitteR")
+library(twitteR)
+library(rtweet)
+consumer_key <- "o1lkQSBgm8GU9xm8xBrjlHygB"
+consumer_secret <- "ujzRIXhVPo3Fb1xrjBEpgVyOk6hj3W6VIsbaWTCULQUt3ocNhl"
+token <- create_token(app = "Lab1-50247311", consumer_key = consumer_key, consumer_secret = consumer_secret)
+setup_twitter_oauth(consumer_key, consumer_secret, access_token=NULL, access_secret=NULL)
+```
+
+```{r}
+library(rtweet)
+#tweets <- searchTwitter("Flu OR Influenza OR Virus", n=80000, geocode='39.8,-95.583068847656,2500km', since = '2018-03-01')
+tweets <- search_tweets("Gun Control", token=token ,n=1, include_rts= FALSE, retryonratelimit = TRUE)
+save_as_csv(tweets, "gunControl_Tweets_4_asvv", prepend_ids = TRUE, na = "",
+   fileEncoding = "UTF-8")
+```
+
+```{r}
+#read column from csv and put it into text file
+tweets_csv<-read.csv("Tweets/gunControl_Tweets_4_6.tweets.csv",header=TRUE)
+tweets_text<-data.frame(tweets_csv[,5])
+write.table(tweets_text, "Tweets/tweets_GUN_large_data_4-6.txt", append=TRUE, sep = "\t", row.names=FALSE)
+```
+
+```{r}
+#Reducer Output for WordCloud
+library(jsonlite)
+tweets_csv<-read.table("HadoopLab/TwitterData/TwitterWords/NK_TwitterData/part-00000",header=FALSE,sep='\t',nrows=1500)
+names(tweets_csv)<-c("a","b")
+tweets_csv$a<-substring(tweets_csv$a, 2)
+df_split<-strsplit(as.character(tweets_csv$a), split=",")
+tweets_csv <- transform(tweets_csv, text= sapply(df_split, "[[", 1),size= sapply(df_split, "[[", 2))
+df_split<-strsplit(as.character(tweets_csv$size), split="]")
+tweets_csv <- transform(tweets_csv, size= sapply(df_split, "[[", 1))
+
+reducerData<-data.frame(tweets_csv$text,tweets_csv$size)
+names(reducerData)<-c("text","size")
+reducerData
+
+reducerDataJson <- toJSON(reducerData)
+write("NK_TweetWeek=",file="htmlLab2Part2/ReducerJsonData/NK_TweetWeek.js")
+write(reducerDataJson,file="htmlLab2Part2/ReducerJsonData/NK_TweetWeek.js", append=TRUE)
+```
+
+```{r}
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#Reducer Output for WordCloud  gc twitter data small
+library(jsonlite)
+tweets_csv<-read.table("HadoopLab/TwitterData/TwitterWords/GC_TwitterDataSmall/part-00000",header=FALSE,sep='\n',nrows=1000)
+nrow(tweets_csv)
+names(tweets_csv)
+tweets_csv$V1<-substring(tweets_csv$V1, 2)
+df_split<-strsplit(as.character(tweets_csv$V1), split=",")
+tweets_csv <- transform(tweets_csv, text= sapply(df_split, "[[", 1),size= sapply(df_split, "[[", 2))
+df_split<-strsplit(as.character(tweets_csv$size), split="]")
+tweets_csv <- transform(tweets_csv, size= sapply(df_split, "[[", 1))
+
+reducerData<-data.frame(tweets_csv$text,tweets_csv$size)
+names(reducerData)<-c("text","size")
+reducerData
+
+reducerDataJson <- toJSON(reducerData)
+write("GC_TweetDay=",file="htmlLab2Part2/ReducerJsonData/GC_TweetDay.js")
+write(reducerDataJson,file="htmlLab2Part2/ReducerJsonData/GC_TweetDay.js", append=TRUE)
+```
+
+```{r}
+#Reducer Output for CoOccurence
+library(jsonlite)
+library(dplyr)
+cooccurence<-read.table("HadoopLab/NewsData/NewsWords/Co_NewsData/part-00000",header=FALSE,sep='\t')
+
+names(cooccurence)<-c("a","b")
+#cooccurence
+df_split<-strsplit(as.character(cooccurence$a), split="-")
+cooccurence <- transform(cooccurence, a= sapply(df_split, "[[", 1),c= sapply(df_split, "[[", 2))
+#cooccurence
+
+reducerData<-data.frame(cooccurence$a,cooccurence$c,cooccurence$b)
+names(reducerData)<-c("co1","co2","wordCount")
+#reducerData
+
+o<-group_by(reducerData,"co1")
+o<-reducerData
+o<-unique(o$co1)
+# o
+o[1]
+reducerData
+nrow(reducerData)
+for (i in 1:length(o)){
+  x=o[i]
+  m<-data.frame(x,"1")
+  names(m)<-c(x,"size")
+  for(j in 1:nrow(reducerData)){
+    if (toString(reducerData[j,1])==toString(x)){
+      val<-data.frame(reducerData[j,2],reducerData[j,3])
+      names(val)<-names(m)
+      write.table(val, paste("htmlLab2Part2/ReducerJsonData/GC_NYACo_Temp/",toString(x), sep = ""),append=TRUE,col.names = FALSE, row.names = FALSE)
+    }
+  }
+}
+selectOptionsHTML<-data.frame(o,o)
+names(selectOptionsHTML)<-c("value","topWords")
+selectOptionsHTMLJ<-toJSON(selectOptionsHTML)
+write("topWords=",file="htmlLab2Part2/ReducerJsonData/GC_NYACo_Top.js", append=TRUE)
+write(selectOptionsHTMLJ,file="htmlLab2Part2/ReducerJsonData/GC_NYACo_Top.js", append=TRUE)
+for(i in 1:length(o)){
+  x=o[i]
+  # data<-read.table(paste("CoOccurenceMatrix/",toString(x), sep = ""), header = FALSE)
+  # names(data)<-c("text","size")
+  # reducerDataJson <- toJSON(data)
+  # #write(paste(toString(x),"=", sep = ""),file="CoOccurenceMatrix/coOccurenceJsonTest.js", append = TRUE)
+  # write(reducerDataJson,file="coOccurenceJsonTest.js", append=TRUE)
+  
+  data<-read.table(paste("htmlLab2Part2/ReducerJsonData/GC_NYACo_Temp/",toString(x), sep = ""), header = FALSE)
+  names(data)<-c("text","size")
+  reducerDataJson <- toJSON(data)
+  reducerDataJson
+  write(paste(toString(x),"=", sep = ""),file="htmlLab2Part2/ReducerJsonData/GC_NYACo.js", append=TRUE)
+  write(reducerDataJson,file="htmlLab2Part2/ReducerJsonData/GC_NYACo.js", append=TRUE)
+}
+
+
+# reducerDataJson <- toJSON(reducerData)
+# write(reducerDataJson,file="coOccurenceJsonTest.js", append=TRUE)
+
+
+```
+
+```{r}
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
